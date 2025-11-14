@@ -7,11 +7,19 @@ import { useTheme } from '@/components/ThemeProvider'
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
-  loading: () => (
-      <div className="flex items-center justify-center h-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md">
+  loading: () => {
+    const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
+    return (
+      <div 
+        className={`flex items-center justify-center h-full rounded-md ${isDark ? '' : 'bg-slate-100 border border-slate-200'}`}
+        style={{
+          backgroundColor: isDark ? '#0f172a' : undefined,
+        }}
+      >
         <div className="text-slate-500 dark:text-slate-400">Loading editor...</div>
       </div>
-  )
+    )
+  }
 })
 
 interface ResizableJsonEditorProps {
@@ -44,6 +52,7 @@ export default function ResizableJsonEditor({
   const startHeightRef = useRef<number>(0)
   
   const editorTheme = theme === 'dark' ? 'vs-dark' : 'vs'
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     // Use flex fill on initialization
@@ -111,8 +120,11 @@ export default function ResizableJsonEditor({
       )}
       <div 
         ref={editorRef}
-        className="relative flex-1 min-h-0 border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden transition-colors shadow-sm"
-        style={{ height: editorHeight }}
+        className={`relative flex-1 min-h-0 rounded-md overflow-hidden transition-colors ${isDark ? '' : 'border border-slate-200 shadow-sm'}`}
+        style={{ 
+          height: editorHeight,
+          backgroundColor: isDark ? '#0f172a' : 'transparent',
+        }}
       >
         <Editor
           height="100%"

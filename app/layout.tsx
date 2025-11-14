@@ -41,13 +41,14 @@ export default function RootLayout({
                 try {
                   const theme = localStorage.getItem('theme');
                   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  const isDark = theme === 'dark' || (!theme && prefersDark);
+                  const initialTheme = theme || (prefersDark ? 'dark' : 'light');
                   const html = document.documentElement;
-                  if (isDark) {
+                  html.classList.remove('dark', 'light');
+                  if (initialTheme === 'dark') {
                     html.classList.add('dark');
                     html.style.colorScheme = 'dark';
                   } else {
-                    html.classList.remove('dark');
+                    html.classList.add('light');
                     html.style.colorScheme = 'light';
                   }
                 } catch (e) {}

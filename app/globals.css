@@ -5,7 +5,43 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  color-scheme: light dark;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
 body {
-  @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50;
+  @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Ensure dark mode styles are applied */
+:root.dark {
+  color-scheme: dark;
+}
+
+:root.light {
+  color-scheme: light;
+}
+
+/* Monaco Editor dark mode styles */
+.dark .monaco-editor,
+.dark .monaco-editor .overflow-guard {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.dark .monaco-editor .monaco-scrollable-element {
+  border: none !important;
+}
+
+.dark .monaco-editor .monaco-editor-background {
+  background-color: transparent !important;
 }

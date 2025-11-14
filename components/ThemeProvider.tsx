@@ -17,6 +17,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
+  const applyTheme = (newTheme: Theme) => {
+    if (typeof document !== 'undefined') {
+      const html = document.documentElement
+      // Remove all theme classes first
+      html.classList.remove('dark', 'light')
+      if (newTheme === 'dark') {
+        html.classList.add('dark')
+        html.style.colorScheme = 'dark'
+      } else {
+        html.classList.add('light')
+        html.style.colorScheme = 'light'
+      }
+    }
+  }
+
   useEffect(() => {
     setMounted(true)
     // Ensure theme is applied on mount
@@ -26,19 +41,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme(initialTheme)
     applyTheme(initialTheme)
   }, [])
-
-  const applyTheme = (newTheme: Theme) => {
-    if (typeof document !== 'undefined') {
-      const html = document.documentElement
-      if (newTheme === 'dark') {
-        html.classList.add('dark')
-        html.style.colorScheme = 'dark'
-      } else {
-        html.classList.remove('dark')
-        html.style.colorScheme = 'light'
-      }
-    }
-  }
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
