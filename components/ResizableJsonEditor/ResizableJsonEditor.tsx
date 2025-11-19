@@ -49,6 +49,43 @@ export default function ResizableJsonEditor({
   
   const editorTheme = theme === 'dark' ? 'vs-dark' : 'vs'
 
+  const handleEditorMount = (editor: any, monaco: any) => {
+    // Configure JSON formatting options
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true,
+      allowComments: true,
+      schemas: [],
+      enableSchemaRequest: true
+    })
+
+    // Set formatting options for JSON
+    monaco.languages.registerDocumentFormattingEditProvider('json', {
+      provideDocumentFormattingEdits(model: any) {
+        const text = model.getValue()
+        try {
+          const parsed = JSON.parse(text)
+          const formatted = JSON.stringify(parsed, null, 4)
+          return [{
+            range: model.getFullModelRange(),
+            text: formatted
+          }]
+        } catch {
+          return []
+        }
+      }
+    })
+
+    // Set formatting options for XML and YAML if needed
+    if (language === 'xml' || language === 'yaml') {
+      // Keep existing formatting for non-JSON languages
+    }
+
+    // Call the external onMount callback
+    if (onMount) {
+      onMount(editor, monaco)
+    }
+  }
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return
@@ -120,16 +157,18 @@ export default function ResizableJsonEditor({
           value={value}
           onChange={onChange}
           theme={editorTheme}
-          onMount={onMount}
+          onMount={handleEditorMount}
           options={{
             readOnly,
             minimap: { enabled: false },
-            fontSize: style === 'pixel' ? 12 : 13,
+            fontSize: style === 'pixel' ? 11 : 13,
             fontFamily: 'var(--font-mono)',
             lineNumbers: 'on',
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            tabSize: 2,
+            tabSize: 4,
+            insertSpaces: true,
+            detectIndentation: false,
             wordWrap: 'on',
             formatOnPaste: true,
             formatOnType: true,

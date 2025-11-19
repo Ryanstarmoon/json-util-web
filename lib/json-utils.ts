@@ -10,7 +10,7 @@ export function formatJson(jsonString: string): { success: boolean; result?: str
     const parsed = JSON.parse(jsonString);
     return {
       success: true,
-      result: JSON.stringify(parsed, null, 2)
+      result: JSON.stringify(parsed, null, 4)
     };
   } catch (error) {
     return {
@@ -40,7 +40,7 @@ export function formatXml(xmlString: string): { success: boolean; result?: strin
     // First, parse XML to JSON object (non-compact mode preserves structure better)
     const jsonResult = xml2json(cleanedXml, { 
       compact: false,  // Use non-compact mode for better structure preservation
-      spaces: 2,
+      spaces: 4,
       ignoreComment: true,
       ignoreAttributes: false,
       ignoreDeclaration: true,
@@ -70,7 +70,7 @@ export function formatXml(xmlString: string): { success: boolean; result?: strin
     // Convert back to XML with formatting using non-compact mode
     const formattedXml = json2xml(jsonData, {
       compact: false,  // Non-compact mode for formatted output
-      spaces: 2,
+      spaces: 4,
       ignoreComment: true,
       ignoreAttributes: false
     });
@@ -227,7 +227,7 @@ export function jsonToXml(jsonString: string): { success: boolean; result?: stri
     
     const xml = json2xml(xmlData, {
       compact: true,
-      spaces: 2,
+      spaces: 4,
       textKey: '_text',
       cdataKey: '_cdata',
       attributesKey: '_attributes'
@@ -251,7 +251,7 @@ export function jsonToXml(jsonString: string): { success: boolean; result?: stri
 export function jsonToYaml(jsonString: string): { success: boolean; result?: string; error?: string } {
   try {
     const data = JSON.parse(jsonString);
-    const yamlString = yaml.dump(data, { indent: 2 });
+    const yamlString = yaml.dump(data, { indent: 4 });
     return {
       success: true,
       result: yamlString
@@ -305,7 +305,7 @@ export function csvToJson(csvString: string): { success: boolean; result?: strin
     
     return {
       success: true,
-      result: JSON.stringify(rows, null, 2)
+      result: JSON.stringify(rows, null, 4)
     };
   } catch (error) {
     return {
@@ -386,7 +386,7 @@ export function xmlToJson(xmlString: string): { success: boolean; result?: strin
     // xml2json returns a JSON string, use compact mode to match jsonToXml output format
     const result = xml2json(cleanedXml, { 
       compact: true, 
-      spaces: 2,
+      spaces: 4,
       ignoreComment: true,
       ignoreAttributes: false,
       textKey: '_text',
@@ -440,20 +440,20 @@ export function xmlToJson(xmlString: string): { success: boolean; result?: strin
           if (rootKeys.length === 1 && rootKeys[0] === 'item' && Array.isArray(rootContent.item)) {
             return {
               success: true,
-              result: JSON.stringify(rootContent.item, null, 2)
+              result: JSON.stringify(rootContent.item, null, 4)
             };
           }
         }
         return {
           success: true,
-          result: JSON.stringify(rootContent, null, 2)
+          result: JSON.stringify(rootContent, null, 4)
         };
       }
     }
     
     return {
       success: true,
-      result: JSON.stringify(normalized, null, 2)
+      result: JSON.stringify(normalized, null, 4)
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'XML conversion failed';
@@ -479,7 +479,7 @@ export function yamlToJson(yamlString: string): { success: boolean; result?: str
     const data = yaml.load(yamlString);
     return {
       success: true,
-      result: JSON.stringify(data, null, 2)
+      result: JSON.stringify(data, null, 4)
     };
   } catch (error) {
     return {
