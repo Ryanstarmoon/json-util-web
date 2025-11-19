@@ -3,45 +3,185 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-space-grotesk);
+  
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  
+  /* Use hsl() wrapper for color vars to support opacity modifiers in Tailwind v4 */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
 }
 
 html {
   color-scheme: light dark;
 }
 
-html.dark {
-  color-scheme: dark;
+/* MODERN THEME (Default) */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+  --radius: 0.5rem;
+  --shadow-pixel: 0 0 0 0 transparent;
 }
 
-html.light {
-  color-scheme: light;
-}
-
-body {
-  @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50;
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
-/* Ensure dark mode styles are applied */
 :root.dark {
-  color-scheme: dark;
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+  --shadow-pixel: 0 0 0 0 transparent;
 }
 
-:root.light {
-  color-scheme: light;
+/* PIXEL THEME OVERRIDES */
+:root[data-style="pixel"] {
+  --background: 45 30% 96%;
+  --foreground: 0 0% 10%;
+  --card: 45 30% 96%;
+  --card-foreground: 0 0% 10%;
+  --popover: 45 30% 96%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 260 80% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 320 80% 60%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 45 10% 85%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 180 80% 40%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 80% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 10%;
+  --input: 0 0% 10%;
+  --ring: 0 0% 10%;
+  --radius: 0;
+  --shadow-pixel: 4px 4px 0px 0px hsl(var(--border)); 
 }
 
-/* Monaco Editor dark mode styles */
-.dark .monaco-editor,
-.dark .monaco-editor .overflow-guard {
-  border: none !important;
+:root[data-style="pixel"].dark {
+  --background: 240 10% 10%;
+  --foreground: 45 30% 96%;
+  --card: 240 10% 10%;
+  --card-foreground: 45 30% 96%;
+  --popover: 240 10% 10%;
+  --popover-foreground: 45 30% 96%;
+  --primary: 260 80% 70%;
+  --primary-foreground: 240 10% 10%;
+  --secondary: 320 80% 70%;
+  --secondary-foreground: 240 10% 10%;
+  --muted: 240 10% 20%;
+  --muted-foreground: 240 10% 70%;
+  --accent: 180 80% 50%;
+  --accent-foreground: 240 10% 10%;
+  --destructive: 0 80% 70%;
+  --destructive-foreground: 240 10% 10%;
+  --border: 45 30% 96%;
+  --input: 45 30% 96%;
+  --ring: 45 30% 96%;
+  --radius: 0;
+  --shadow-pixel: 4px 4px 0px 0px hsl(var(--border));
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* 
+    Fix: Apply font override on body to ensure it has access to variable scope 
+    where --font-press-start-2p is defined (by Next.js on body element)
+  */
+  :root[data-style="pixel"] body {
+    --font-sans: var(--font-press-start-2p), system-ui, sans-serif;
+    --font-mono: var(--font-press-start-2p), monospace;
+    --font-display: var(--font-press-start-2p), system-ui, sans-serif;
+    
+    font-family: var(--font-sans);
+    image-rendering: pixelated;
+  }
+  
+  /* Pixelated Borders Utility */
+  [data-style="pixel"] .pixel-border {
+    box-shadow: var(--shadow-pixel);
+    border: 2px solid currentColor;
+  }
+  
+  [data-style="pixel"] .pixel-border-sm {
+    box-shadow: 2px 2px 0px 0px currentColor;
+    border: 2px solid currentColor;
+  }
+}
+
+/* Monaco Editor Customization */
+.monaco-editor,
+.monaco-editor .overflow-guard,
+.monaco-editor .monaco-scrollable-element,
+.monaco-editor .monaco-editor-background {
   background-color: transparent !important;
 }
 
-.dark .monaco-editor .monaco-scrollable-element {
-  border: none !important;
-}
-
-.dark .monaco-editor .monaco-editor-background {
+.monaco-editor .margin {
   background-color: transparent !important;
 }

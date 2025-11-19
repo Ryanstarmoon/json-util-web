@@ -2,24 +2,17 @@
 
 import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { GripVertical } from 'lucide-react'
+import { GripHorizontal } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
+import { cn } from '@/lib/utils'
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
-  loading: () => {
-    const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-    return (
-      <div 
-        className={`flex items-center justify-center h-full rounded-md ${isDark ? '' : 'bg-slate-100 border border-slate-200'}`}
-        style={{
-          backgroundColor: isDark ? '#0f172a' : undefined,
-        }}
-      >
-        <div className="text-slate-500 dark:text-slate-400">Loading editor...</div>
-      </div>
-    )
-  }
+  loading: () => (
+    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+      Loading editor...
+    </div>
+  )
 })
 
 interface ResizableJsonEditorProps {
@@ -31,6 +24,7 @@ interface ResizableJsonEditorProps {
   maxHeight?: number
   defaultHeight?: number
   toolbar?: React.ReactNode
+  onMount?: (editor: any, monaco: any) => void
 }
 
 export default function ResizableJsonEditor({
@@ -41,10 +35,12 @@ export default function ResizableJsonEditor({
   minHeight = 200,
   maxHeight = 2000,
   defaultHeight = 600,
-  toolbar
+  toolbar,
+  onMount
 }: ResizableJsonEditorProps) {
-  const { theme } = useTheme()
-  const [height, setHeight] = useState<number | string>(defaultHeight)
+  const { theme, style } = useTheme()
+  // Use undefined to indicate "auto" (flex-1), number for fixed pixel height
+  const [height, setHeight] = useState<number | undefined>(undefined)
   const [isResizing, setIsResizing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
@@ -52,21 +48,6 @@ export default function ResizableJsonEditor({
   const startHeightRef = useRef<number>(0)
   
   const editorTheme = theme === 'dark' ? 'vs-dark' : 'vs'
-  const isDark = theme === 'dark'
-
-  useEffect(() => {
-    // Use flex fill on initialization
-    if (!isResizing && typeof height === 'number') {
-      const container = containerRef.current
-      if (container) {
-        const containerHeight = container.clientHeight
-        if (containerHeight > 0) {
-          setHeight('100%')
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -105,25 +86,32 @@ export default function ResizableJsonEditor({
     startYRef.current = e.clientY
     const editor = editorRef.current
     if (editor) {
+      // When starting resize, grab current actual height
       startHeightRef.current = editor.clientHeight
+      // Set initial height to current pixel value to prevent jump
+      if (height === undefined) {
+        setHeight(editor.clientHeight)
+      }
     }
   }
 
-  const editorHeight = typeof height === 'number' ? `${height}px` : height
-
   return (
-    <div ref={containerRef} className="flex flex-col h-full min-h-0">
+    <div ref={containerRef} className="flex flex-col h-full w-full bg-card text-card-foreground">
       {toolbar && (
-        <div className="flex items-center justify-start mb-2">
+        <div className="flex-none z-10">
           {toolbar}
         </div>
       )}
       <div 
         ref={editorRef}
-        className={`relative flex-1 min-h-0 rounded-md overflow-hidden transition-colors ${isDark ? '' : 'border border-slate-200 shadow-sm'}`}
+        className={cn(
+          "relative w-full min-h-0 group",
+          // If height is set (custom), use flex-none so it respects height style
+          // If height is undefined (auto), use flex-1 to fill remaining space
+          height !== undefined ? "flex-none" : "flex-1"
+        )}
         style={{ 
-          height: editorHeight,
-          backgroundColor: isDark ? '#0f172a' : 'transparent',
+          height: height !== undefined ? height : undefined
         }}
       >
         <Editor
@@ -132,10 +120,12 @@ export default function ResizableJsonEditor({
           value={value}
           onChange={onChange}
           theme={editorTheme}
+          onMount={onMount}
           options={{
             readOnly,
             minimap: { enabled: false },
-            fontSize: 14,
+            fontSize: style === 'pixel' ? 12 : 13,
+            fontFamily: 'var(--font-mono)',
             lineNumbers: 'on',
             scrollBeyondLastLine: false,
             automaticLayout: true,
@@ -143,16 +133,33 @@ export default function ResizableJsonEditor({
             wordWrap: 'on',
             formatOnPaste: true,
             formatOnType: true,
+            padding: { top: 16, bottom: 16 },
+            smoothScrolling: true,
+            cursorBlinking: 'smooth',
+            cursorSmoothCaretAnimation: 'on',
+            renderLineHighlight: 'all',
           }}
         />
+        
+        {/* Resize handle */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-2 cursor-row-resize hover:bg-blue-500/20 flex items-center justify-center group z-10"
+          className={cn(
+            "absolute bottom-0 left-0 right-0 h-1.5 cursor-row-resize z-20 transition-colors flex items-center justify-center",
+            "hover:bg-primary/10",
+            isResizing && "bg-primary/20"
+          )}
           onMouseDown={handleMouseDown}
         >
-          <GripVertical className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className={cn(
+            "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            isResizing && "opacity-100"
+          )}>
+            <div className="bg-background/80 backdrop-blur border rounded-full p-0.5 shadow-sm">
+              <GripHorizontal className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
-

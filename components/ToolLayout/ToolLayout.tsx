@@ -3,7 +3,9 @@
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/ThemeProvider'
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sun, Terminal, Sparkles, Box } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ToolLayoutProps {
   title: string
@@ -12,7 +14,7 @@ interface ToolLayoutProps {
 }
 
 export default function ToolLayout({ title, description, children }: ToolLayoutProps) {
-  const { theme, toggleTheme, mounted } = useTheme()
+  const { theme, toggleTheme, style, toggleStyle, mounted } = useTheme()
 
   // Ensure theme is applied to html element
   useEffect(() => {
@@ -24,69 +26,90 @@ export default function ToolLayout({ title, description, children }: ToolLayoutP
     }
   }, [theme])
 
-  const isDark = theme === 'dark'
+  const isPixel = style === 'pixel'
 
   return (
-    <div 
-      className="min-h-screen transition-colors"
-      style={{
-        backgroundColor: isDark ? '#020617' : '#f8fafc',
-      }}
-    >
-      <nav 
-        className="border-b transition-colors shadow-sm"
-        style={{
-          backgroundColor: isDark ? '#0f172a' : '#ffffff',
-          borderColor: isDark ? '#1e293b' : '#e2e8f0',
-        }}
-      >
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-12">
-            <div className="flex items-center">
-              <span 
-                className="text-xl font-semibold font-[family-name:var(--font-space-grotesk)] tracking-tight"
-                style={{
-                  color: isDark ? '#f8fafc' : '#0f172a',
-                }}
-              >
-                JSON TOOL
+    <TooltipProvider delayDuration={300}>
+      <div className="h-screen w-full flex flex-col bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground overflow-hidden transition-colors duration-300">
+        <nav className={cn(
+          "flex-none sticky top-0 z-40 w-full bg-background transition-all duration-300",
+          isPixel ? "border-b-2 border-border" : "border-b backdrop-blur-sm bg-background/80"
+        )}>
+          <div className={cn(
+            "flex items-center px-4 sm:px-6 lg:px-8 h-16"
+          )}>
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "flex items-center justify-center text-primary-foreground w-9 h-9",
+                isPixel ? "bg-primary pixel-border-sm" : "rounded-md bg-primary text-primary-foreground"
+              )}>
+                <Terminal className="w-4 h-4" />
+              </div>
+              <span className={cn(
+                "font-bold tracking-tight",
+                isPixel ? "text-sm sm:text-base" : "text-lg sm:text-xl"
+              )}>
+                {title}
               </span>
             </div>
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTheme}
-                className="h-8 w-8 p-0"
-                style={{
-                  color: isDark ? '#cbd5e1' : '#334155',
-                }}
-                aria-label="Toggle theme"
-              >
-                {mounted && theme === 'dark' ? (
-                  <Sun className="w-4 h-4" />
-                ) : (
-                  <Moon className="w-4 h-4" />
-                )}
-              </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleStyle}
+                    className="h-9 w-9"
+                  >
+                    {isPixel ? <Box className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isPixel ? "Switch to Modern Mode" : "Switch to Pixel Mode"}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    className="h-9 w-9"
+                    aria-label="Toggle theme"
+                  >
+                    {mounted && theme === 'dark' ? (
+                      <Sun className={cn(
+                        "text-yellow-500",
+                        "h-4 w-4"
+                      )} />
+                    ) : (
+                      <Moon className={cn(
+                        "text-foreground",
+                        "h-4 w-4"
+                      )} />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main 
-        className="h-[calc(100vh-3rem)] px-4 sm:px-6 lg:px-8 py-4 transition-colors"
-        style={{
-          backgroundColor: isDark ? '#020617' : '#f8fafc',
-        }}
-      >
-        <div className="h-full flex flex-col">
-          <div className="flex-1 min-h-0">
-            {children}
+        <main className="flex-1 min-h-0 w-full p-4 sm:p-6">
+          <div className="mx-auto h-full w-full max-w-[1600px] flex flex-col gap-4">
+            <div className={cn(
+              "flex-1 min-h-0 bg-card text-card-foreground flex flex-col overflow-hidden",
+              isPixel ? "pixel-border" : "rounded-xl border shadow-sm"
+            )}>
+              {children}
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </TooltipProvider>
   )
 }
-

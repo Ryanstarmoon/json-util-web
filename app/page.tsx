@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import ToolLayout from '@/components/ToolLayout/ToolLayout'
 import ResizableJsonEditor from '@/components/ResizableJsonEditor/ResizableJsonEditor'
 import UnifiedToolbar from '@/components/UnifiedToolbar/UnifiedToolbar'
@@ -15,6 +15,22 @@ export default function Home() {
   const [success, setSuccess] = useState<string | null>(null)
   const [currentFormat, setCurrentFormat] = useState<'json' | 'xml' | 'yaml'>('json')
   const [detectedFormat, setDetectedFormat] = useState<'json' | 'xml' | 'yaml' | null>(null)
+  const editorRef = useRef<any>(null)
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor
+  }
+
+  const handleSearch = () => {
+    editorRef.current?.trigger('source', 'actions.find')
+  }
+
+  const handleClear = () => {
+    setInput('')
+    setError(null)
+    setSuccess(null)
+    setDetectedFormat(null)
+  }
 
   const loadExample = () => {
     // Load example and auto-format
@@ -250,6 +266,7 @@ export default function Home() {
       <div className="h-full flex flex-col">
         <ResizableJsonEditor
           value={input}
+          onMount={handleEditorDidMount}
           onChange={(value) => {
             const newValue = value || ''
             setInput(newValue)
@@ -274,6 +291,8 @@ export default function Home() {
               onConvertToYaml={handleConvertToYaml}
               onLoadExample={loadExample}
               onCopy={handleCopy}
+              onClear={handleClear}
+              onSearch={handleSearch}
               showCopy={!!input}
               currentFormat={currentFormat}
               error={error}
