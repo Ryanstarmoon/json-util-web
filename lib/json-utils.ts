@@ -202,21 +202,25 @@ export function jsonToXml(jsonString: string): { success: boolean; result?: stri
   try {
     const data = JSON.parse(jsonString);
     
-    // Ensure data has a root node, if already an object with a single root node use it directly, otherwise wrap in root
+    // Ensure data has a root node, wrap all data in root node
     let xmlData = data;
     
-    // If data is an array, wrap in root node
+    // If data is an array, wrap in root node with item elements
     if (Array.isArray(data)) {
-      xmlData = { root: data };
+      // Convert array to object with root containing item elements
+      xmlData = { root: { item: data } };
     } 
     // If data is a primitive type, wrap in root node
     else if (typeof data !== 'object' || data === null) {
       xmlData = { root: { _text: String(data) } };
     }
-    // If object has multiple top-level keys, wrap in root node
+    // If object, always wrap in root node (unless it already has a single 'root' key)
     else {
       const keys = Object.keys(data);
-      if (keys.length > 1) {
+      // Only skip wrapping if object already has a single 'root' key (might be from previous XML conversion)
+      if (keys.length === 1 && keys[0] === 'root') {
+        xmlData = data;
+      } else {
         xmlData = { root: data };
       }
     }
@@ -428,9 +432,21 @@ export function xmlToJson(xmlString: string): { success: boolean; result?: strin
     if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
       const keys = Object.keys(normalized);
       if (keys.length === 1 && keys[0] === 'root') {
+        const rootContent = normalized.root;
+        // If root content is an object with only 'item' key and item is an array, return the array directly
+        // This handles the case where JSON array was converted to XML with item wrapper
+        if (rootContent && typeof rootContent === 'object' && !Array.isArray(rootContent)) {
+          const rootKeys = Object.keys(rootContent);
+          if (rootKeys.length === 1 && rootKeys[0] === 'item' && Array.isArray(rootContent.item)) {
+            return {
+              success: true,
+              result: JSON.stringify(rootContent.item, null, 2)
+            };
+          }
+        }
         return {
           success: true,
-          result: JSON.stringify(normalized.root, null, 2)
+          result: JSON.stringify(rootContent, null, 2)
         };
       }
     }
