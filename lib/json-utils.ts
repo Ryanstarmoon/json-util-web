@@ -102,7 +102,8 @@ export function extractFromCurl(curlString: string): { success: boolean; result?
     }
 
     // Extract data/body from -d, --data, --data-raw, --data-binary
-    const dataMatch = trimmed.match(/(?:-d|--data(?:-raw|-binary)?)\s+['"](.+?)['"]/s) ||
+    // Use [\s\S] instead of . with /s flag for ES5 compatibility
+    const dataMatch = trimmed.match(/(?:-d|--data(?:-raw|-binary)?)\s+['"]([\s\S]+?)['"]/) ||
                       trimmed.match(/(?:-d|--data(?:-raw|-binary)?)\s+([^\s]+)/);
     
     if (dataMatch) {

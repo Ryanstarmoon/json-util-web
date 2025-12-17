@@ -936,12 +936,9 @@ export default function Workbench() {
                       <Network className="h-3.5 w-3.5 rotate-45" /> Graph
                     </Button>
                     <Button 
-                      variant={mode === 'diff' ? 'default' : 'ghost'} 
+                      variant="ghost" 
                       size="sm" 
-                      className={cn(
-                          "h-7 text-xs gap-1.5 px-3",
-                          mode === 'diff' && "bg-primary text-primary-foreground hover:bg-primary/90"
-                      )}
+                      className="h-7 text-xs gap-1.5 px-3"
                       onClick={() => setMode('diff')}
                     >
                       <GitCompare className="h-3.5 w-3.5" /> Diff
