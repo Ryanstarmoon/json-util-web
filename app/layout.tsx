@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Space_Grotesk, Press_Start_2P } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
@@ -18,12 +18,6 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-});
-
-const pressStart2P = Press_Start_2P({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-press-start-2p",
 });
 
 export const metadata: Metadata = {
@@ -49,8 +43,6 @@ export default function RootLayout({
                   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   const initialTheme = theme || (prefersDark ? 'dark' : 'light');
                   
-                  const style = localStorage.getItem('style') || 'pixel';
-                  
                   const html = document.documentElement;
                   html.classList.remove('dark', 'light');
                   if (initialTheme === 'dark') {
@@ -60,8 +52,6 @@ export default function RootLayout({
                     html.classList.add('light');
                     html.style.colorScheme = 'light';
                   }
-                  
-                  html.setAttribute('data-style', style);
                 } catch (e) {}
               })();
             `,
@@ -69,7 +59,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${pressStart2P.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
         suppressHydrationWarning
       >
         <ThemeProvider>

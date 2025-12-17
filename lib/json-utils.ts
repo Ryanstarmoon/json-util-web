@@ -3,6 +3,449 @@ import yaml from 'js-yaml';
 import { json2xml, xml2json } from 'xml-js';
 
 /**
+ * Try to fix common JSON errors
+ * - Remove trailing commas
+ * - Replace single quotes with double quotes
+ * - Try to auto-close brackets
+ */
+export function tryFixJson(jsonString: string): { success: boolean; result?: string; error?: string; fixes?: string[] } {
+  const fixes: string[] = [];
+  let fixed = jsonString;
+
+  // 1. Replace single quotes with double quotes (for keys and string values)
+  // But be careful not to replace single quotes inside double-quoted strings
+  const singleQuotePattern = /(?<!\\)'([^'\\]*(?:\\.[^'\\]*)*)'/g;
+  if (singleQuotePattern.test(fixed)) {
+    fixed = fixed.replace(singleQuotePattern, '"$1"');
+    fixes.push('Replaced single quotes with double quotes');
+  }
+
+  // 2. Remove trailing commas before } or ]
+  const trailingCommaPattern = /,(\s*[}\]])/g;
+  if (trailingCommaPattern.test(fixed)) {
+    fixed = fixed.replace(trailingCommaPattern, '$1');
+    fixes.push('Removed trailing commas');
+  }
+
+  // 3. Add missing quotes to unquoted keys
+  // Match unquoted keys like { key: value } -> { "key": value }
+  const unquotedKeyPattern = /([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g;
+  if (unquotedKeyPattern.test(fixed)) {
+    fixed = fixed.replace(unquotedKeyPattern, '$1"$2"$3');
+    fixes.push('Added quotes to unquoted keys');
+  }
+
+  // 4. Try to balance brackets
+  const openBraces = (fixed.match(/{/g) || []).length;
+  const closeBraces = (fixed.match(/}/g) || []).length;
+  const openBrackets = (fixed.match(/\[/g) || []).length;
+  const closeBrackets = (fixed.match(/]/g) || []).length;
+
+  if (openBraces > closeBraces) {
+    fixed = fixed + '}'.repeat(openBraces - closeBraces);
+    fixes.push(`Added ${openBraces - closeBraces} missing closing brace(s)`);
+  }
+  if (openBrackets > closeBrackets) {
+    fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
+    fixes.push(`Added ${openBrackets - closeBrackets} missing closing bracket(s)`);
+  }
+
+  // 5. Remove JavaScript-style comments
+  const commentPattern = /\/\/.*$|\/\*[\s\S]*?\*\//gm;
+  if (commentPattern.test(fixed)) {
+    fixed = fixed.replace(commentPattern, '');
+    fixes.push('Removed comments');
+  }
+
+  // Try to parse the fixed JSON
+  try {
+    const parsed = JSON.parse(fixed);
+    return {
+      success: true,
+      result: JSON.stringify(parsed, null, 2),
+      fixes
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fix JSON',
+      fixes
+    };
+  }
+}
+
+/**
+ * Extract JSON from cURL command
+ */
+export function extractFromCurl(curlString: string): { success: boolean; result?: string; url?: string; headers?: Record<string, string>; error?: string } {
+  try {
+    const trimmed = curlString.trim();
+    
+    // Check if it's a curl command
+    if (!trimmed.toLowerCase().startsWith('curl')) {
+      return { success: false, error: 'Not a valid cURL command' };
+    }
+
+    // Extract URL
+    const urlMatch = trimmed.match(/curl\s+(?:(?:-[A-Za-z]+|--[a-z-]+)\s+(?:'[^']*'|"[^"]*"|[^\s]+)\s+)*['"]?(https?:\/\/[^\s'"]+)['"]?/i) ||
+                     trimmed.match(/['"]?(https?:\/\/[^\s'"]+)['"]?/);
+    const url = urlMatch ? urlMatch[1] : undefined;
+
+    // Extract headers
+    const headers: Record<string, string> = {};
+    const headerMatches = trimmed.matchAll(/-H\s+['"]([^'"]+)['"]/g);
+    for (const match of headerMatches) {
+      const [key, ...valueParts] = match[1].split(':');
+      if (key) {
+        headers[key.trim()] = valueParts.join(':').trim();
+      }
+    }
+
+    // Extract data/body from -d, --data, --data-raw, --data-binary
+    const dataMatch = trimmed.match(/(?:-d|--data(?:-raw|-binary)?)\s+['"](.+?)['"]/s) ||
+                      trimmed.match(/(?:-d|--data(?:-raw|-binary)?)\s+([^\s]+)/);
+    
+    if (dataMatch) {
+      let data = dataMatch[1];
+      
+      // Try to parse as JSON
+      try {
+        const parsed = JSON.parse(data);
+        return {
+          success: true,
+          result: JSON.stringify(parsed, null, 2),
+          url,
+          headers
+        };
+      } catch {
+        // Try to fix and parse
+        const fixResult = tryFixJson(data);
+        if (fixResult.success) {
+          return {
+            success: true,
+            result: fixResult.result,
+            url,
+            headers
+          };
+        }
+        // Return raw data if not JSON
+        return {
+          success: true,
+          result: data,
+          url,
+          headers
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: 'No data/body found in cURL command',
+      url,
+      headers
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to parse cURL'
+    };
+  }
+}
+
+/**
+ * Decode Base64 and try to parse as JSON
+ */
+export function decodeBase64Json(base64String: string): { success: boolean; result?: string; error?: string } {
+  try {
+    // Clean up the string (remove whitespace, potential data URI prefix)
+    let cleaned = base64String.trim();
+    
+    // Remove data URI prefix if present
+    if (cleaned.includes(',')) {
+      cleaned = cleaned.split(',').pop() || cleaned;
+    }
+    
+    // Check if it looks like Base64
+    const base64Pattern = /^[A-Za-z0-9+/]+=*$/;
+    if (!base64Pattern.test(cleaned.replace(/\s/g, ''))) {
+      return { success: false, error: 'Not a valid Base64 string' };
+    }
+
+    // Decode Base64
+    const decoded = atob(cleaned);
+    
+    // Try to parse as JSON
+    try {
+      const parsed = JSON.parse(decoded);
+      return {
+        success: true,
+        result: JSON.stringify(parsed, null, 2)
+      };
+    } catch {
+      // Try to fix and parse
+      const fixResult = tryFixJson(decoded);
+      if (fixResult.success) {
+        return {
+          success: true,
+          result: fixResult.result
+        };
+      }
+      // Return decoded text if not JSON
+      return {
+        success: true,
+        result: decoded
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to decode Base64'
+    };
+  }
+}
+
+/**
+ * Smart detect and extract content from various formats
+ * - cURL commands
+ * - Base64 encoded JSON
+ * - Log lines containing JSON
+ * - URL-encoded JSON
+ */
+export function smartExtract(content: string): { success: boolean; result?: string; detectedType?: string; error?: string } {
+  const trimmed = content.trim();
+
+  // 1. Check for cURL
+  if (trimmed.toLowerCase().startsWith('curl')) {
+    const curlResult = extractFromCurl(trimmed);
+    if (curlResult.success && curlResult.result) {
+      return { success: true, result: curlResult.result, detectedType: 'cURL' };
+    }
+  }
+
+  // 2. Check for Base64 (looks like Base64 and is long enough)
+  const base64Pattern = /^[A-Za-z0-9+/]{20,}=*$/;
+  if (base64Pattern.test(trimmed.replace(/\s/g, ''))) {
+    const base64Result = decodeBase64Json(trimmed);
+    if (base64Result.success) {
+      return { success: true, result: base64Result.result, detectedType: 'Base64' };
+    }
+  }
+
+  // 3. Check for URL-encoded content
+  if (trimmed.includes('%7B') || trimmed.includes('%5B')) {
+    try {
+      const decoded = decodeURIComponent(trimmed);
+      try {
+        const parsed = JSON.parse(decoded);
+        return { success: true, result: JSON.stringify(parsed, null, 2), detectedType: 'URL-encoded' };
+      } catch {
+        // Continue to other checks
+      }
+    } catch {
+      // Not URL-encoded
+    }
+  }
+
+  // 4. Try to extract JSON from log lines (find first { or [ and match to end)
+  const jsonStartMatch = trimmed.match(/[{\[]/);
+  if (jsonStartMatch && jsonStartMatch.index !== undefined && jsonStartMatch.index > 0) {
+    const potentialJson = trimmed.slice(jsonStartMatch.index);
+    try {
+      const parsed = JSON.parse(potentialJson);
+      return { success: true, result: JSON.stringify(parsed, null, 2), detectedType: 'Log line' };
+    } catch {
+      const fixResult = tryFixJson(potentialJson);
+      if (fixResult.success) {
+        return { success: true, result: fixResult.result, detectedType: 'Log line (fixed)' };
+      }
+    }
+  }
+
+  // 5. Try direct JSON parse
+  try {
+    const parsed = JSON.parse(trimmed);
+    return { success: true, result: JSON.stringify(parsed, null, 2), detectedType: 'JSON' };
+  } catch {
+    // 6. Try to fix JSON
+    const fixResult = tryFixJson(trimmed);
+    if (fixResult.success) {
+      return { success: true, result: fixResult.result, detectedType: 'JSON (fixed)' };
+    }
+  }
+
+  return { success: false, error: 'Could not detect or parse content' };
+}
+
+/**
+ * Calculate JSON statistics
+ */
+export function getJsonStats(jsonString: string): { nodeCount: number; depth: number; size: number } | null {
+  try {
+    const parsed = JSON.parse(jsonString);
+    
+    let nodeCount = 0;
+    let maxDepth = 0;
+
+    function traverse(obj: any, depth: number) {
+      maxDepth = Math.max(maxDepth, depth);
+      
+      if (obj === null || typeof obj !== 'object') {
+        nodeCount++;
+        return;
+      }
+
+      nodeCount++;
+      
+      if (Array.isArray(obj)) {
+        obj.forEach(item => traverse(item, depth + 1));
+      } else {
+        Object.values(obj).forEach(value => traverse(value, depth + 1));
+      }
+    }
+
+    traverse(parsed, 0);
+
+    return {
+      nodeCount,
+      depth: maxDepth,
+      size: new Blob([jsonString]).size
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get JSONPath for a position in the JSON string
+ */
+export function getJsonPathAtPosition(jsonString: string, position: number): string {
+  try {
+    // Simple implementation: count braces/brackets to determine path
+    const path: (string | number)[] = ['$'];
+    let currentKey = '';
+    let inString = false;
+    let escaped = false;
+    let depth = 0;
+    const stack: { type: 'object' | 'array'; key?: string; index: number }[] = [];
+
+    for (let i = 0; i < Math.min(position, jsonString.length); i++) {
+      const char = jsonString[i];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"' && !escaped) {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) {
+        currentKey += char;
+        continue;
+      }
+
+      if (char === '{') {
+        stack.push({ type: 'object', index: 0 });
+        depth++;
+      } else if (char === '[') {
+        stack.push({ type: 'array', index: 0 });
+        depth++;
+      } else if (char === '}' || char === ']') {
+        stack.pop();
+        depth--;
+      } else if (char === ':' && stack.length > 0 && stack[stack.length - 1].type === 'object') {
+        stack[stack.length - 1].key = currentKey;
+        currentKey = '';
+      } else if (char === ',' && stack.length > 0) {
+        if (stack[stack.length - 1].type === 'array') {
+          stack[stack.length - 1].index++;
+        }
+        currentKey = '';
+      }
+    }
+
+    // Build path from stack
+    for (const frame of stack) {
+      if (frame.type === 'object' && frame.key) {
+        path.push(frame.key);
+      } else if (frame.type === 'array') {
+        path.push(frame.index);
+      }
+    }
+
+    return path.map((p, i) => {
+      if (i === 0) return p;
+      if (typeof p === 'number') return `[${p}]`;
+      return `.${p}`;
+    }).join('');
+  } catch {
+    return '$';
+  }
+}
+
+/**
+ * Escape string - convert special characters to escape sequences
+ */
+export function escapeString(str: string): { success: boolean; result?: string; error?: string } {
+  try {
+    // Use JSON.stringify to escape, then remove outer quotes
+    const escaped = JSON.stringify(str);
+    // Remove the outer quotes added by JSON.stringify
+    const result = escaped.slice(1, -1);
+    return {
+      success: true,
+      result
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Escape failed'
+    };
+  }
+}
+
+/**
+ * Unescape string - convert escape sequences back to characters
+ */
+export function unescapeString(str: string): { success: boolean; result?: string; error?: string } {
+  try {
+    // Add quotes and use JSON.parse to unescape
+    const result = JSON.parse(`"${str}"`);
+    return {
+      success: true,
+      result
+    };
+  } catch (error) {
+    // Try a more lenient approach for common escape sequences
+    try {
+      const result = str
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\r')
+        .replace(/\\t/g, '\t')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\'/g, "'");
+      return {
+        success: true,
+        result
+      };
+    } catch {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unescape failed'
+      };
+    }
+  }
+}
+
+/**
  * Format JSON string
  */
 export function formatJson(jsonString: string): { success: boolean; result?: string; error?: string } {

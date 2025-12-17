@@ -43,7 +43,7 @@ html {
   color-scheme: light dark;
 }
 
-/* MODERN THEME (Default) */
+/* Light Theme (Default) */
 :root {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
@@ -65,9 +65,9 @@ html {
   --input: 240 5.9% 90%;
   --ring: 240 5.9% 10%;
   --radius: 0.5rem;
-  --shadow-pixel: 0 0 0 0 transparent;
 }
 
+/* Dark Theme */
 :root.dark {
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
@@ -89,56 +89,6 @@ html {
   --input: 240 3.7% 15.9%;
   --ring: 240 4.9% 83.9%;
   --radius: 0.5rem;
-  --shadow-pixel: 0 0 0 0 transparent;
-}
-
-/* PIXEL THEME OVERRIDES */
-:root[data-style="pixel"] {
-  --background: 45 30% 96%;
-  --foreground: 0 0% 10%;
-  --card: 45 30% 96%;
-  --card-foreground: 0 0% 10%;
-  --popover: 45 30% 96%;
-  --popover-foreground: 0 0% 10%;
-  --primary: 260 80% 60%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 320 80% 60%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 45 10% 85%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 180 80% 40%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 80% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 10%;
-  --input: 0 0% 10%;
-  --ring: 0 0% 10%;
-  --radius: 0;
-  --shadow-pixel: 4px 4px 0px 0px hsl(var(--border)); 
-}
-
-:root[data-style="pixel"].dark {
-  --background: 240 10% 10%;
-  --foreground: 45 30% 96%;
-  --card: 240 10% 10%;
-  --card-foreground: 45 30% 96%;
-  --popover: 240 10% 10%;
-  --popover-foreground: 45 30% 96%;
-  --primary: 260 80% 70%;
-  --primary-foreground: 240 10% 10%;
-  --secondary: 320 80% 70%;
-  --secondary-foreground: 240 10% 10%;
-  --muted: 240 10% 20%;
-  --muted-foreground: 240 10% 70%;
-  --accent: 180 80% 50%;
-  --accent-foreground: 240 10% 10%;
-  --destructive: 0 80% 70%;
-  --destructive-foreground: 240 10% 10%;
-  --border: 45 30% 96%;
-  --input: 45 30% 96%;
-  --ring: 45 30% 96%;
-  --radius: 0;
-  --shadow-pixel: 4px 4px 0px 0px hsl(var(--border));
 }
 
 @layer base {
@@ -147,30 +97,6 @@ html {
   }
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-  }
-  
-  /* 
-    Fix: Apply font override on body to ensure it has access to variable scope 
-    where --font-press-start-2p is defined (by Next.js on body element)
-  */
-  :root[data-style="pixel"] body {
-    --font-sans: var(--font-press-start-2p), system-ui, sans-serif;
-    --font-mono: var(--font-press-start-2p), monospace;
-    --font-display: var(--font-press-start-2p), system-ui, sans-serif;
-    
-    font-family: var(--font-sans);
-    image-rendering: pixelated;
-  }
-  
-  /* Pixelated Borders Utility */
-  [data-style="pixel"] .pixel-border {
-    box-shadow: var(--shadow-pixel);
-    border: 2px solid currentColor;
-  }
-  
-  [data-style="pixel"] .pixel-border-sm {
-    box-shadow: 2px 2px 0px 0px currentColor;
-    border: 2px solid currentColor;
   }
 }
 

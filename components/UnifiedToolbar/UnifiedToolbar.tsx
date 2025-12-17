@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { useTheme } from '@/components/ThemeProvider'
 
 interface UnifiedToolbarProps {
   onFormat?: () => void
@@ -54,11 +53,6 @@ export default function UnifiedToolbar({
   error,
   success
 }: UnifiedToolbarProps) {
-  const { style } = useTheme()
-  const isPixel = style === 'pixel'
-  // Slightly increased font size for better readability in pixel mode
-  const fontSizeClass = isPixel ? "text-[11px]" : ""
-
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex flex-col gap-3 p-3 border-b-2 border-border bg-muted/50 sm:flex-row sm:items-center sm:justify-between sm:h-16 sm:p-2 sm:px-4 transition-all duration-300">
@@ -73,7 +67,6 @@ export default function UnifiedToolbar({
                     onClick={() => currentFormat !== 'json' && onConvertToJson?.()}
                     className={cn(
                       "gap-2",
-                      fontSizeClass,
                       currentFormat !== 'json' && "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -94,7 +87,6 @@ export default function UnifiedToolbar({
                     onClick={() => currentFormat !== 'xml' && onConvertToXml?.()}
                     className={cn(
                       "gap-2",
-                      fontSizeClass,
                       currentFormat !== 'xml' && "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -115,7 +107,6 @@ export default function UnifiedToolbar({
                     onClick={() => currentFormat !== 'yaml' && onConvertToYaml?.()}
                     className={cn(
                       "gap-2",
-                      fontSizeClass,
                       currentFormat !== 'yaml' && "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -140,7 +131,7 @@ export default function UnifiedToolbar({
                     variant="ghost"
                     size="sm"
                     onClick={onFormat}
-                    className={cn("gap-2 text-muted-foreground hover:text-foreground", fontSizeClass)}
+                    className="gap-2 text-muted-foreground hover:text-foreground"
                   >
                     <AlignLeft className="w-4 h-4" />
                     Format
@@ -160,7 +151,7 @@ export default function UnifiedToolbar({
                     size="sm"
                     onClick={onCompress}
                     disabled={currentFormat !== 'json'}
-                    className={cn("gap-2 text-muted-foreground hover:text-foreground disabled:opacity-50", fontSizeClass)}
+                    className="gap-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
                     <Minus className="w-4 h-4" />
                     Compress
@@ -179,7 +170,7 @@ export default function UnifiedToolbar({
                     variant="ghost"
                     size="sm"
                     onClick={onValidate}
-                    className={cn("gap-2 text-muted-foreground hover:text-foreground", fontSizeClass)}
+                    className="gap-2 text-muted-foreground hover:text-foreground"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Validate

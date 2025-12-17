@@ -161,7 +161,7 @@ export default function ResizableJsonEditor({
           options={{
             readOnly,
             minimap: { enabled: false },
-            fontSize: style === 'pixel' ? 11 : 13,
+            fontSize: 13,
             fontFamily: 'var(--font-mono)',
             lineNumbers: 'on',
             scrollBeyondLastLine: false,
