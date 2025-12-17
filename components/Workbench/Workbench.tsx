@@ -125,7 +125,7 @@ export default function Workbench() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [input, format])
+  }, [openCommandPalette, handleDownload, handleFormatAction])
 
   // Auto format function
   const doAutoFormat = useCallback((value: string) => {
