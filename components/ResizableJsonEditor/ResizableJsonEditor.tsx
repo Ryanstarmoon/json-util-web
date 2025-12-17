@@ -38,7 +38,7 @@ export default function ResizableJsonEditor({
   toolbar,
   onMount
 }: ResizableJsonEditorProps) {
-  const { theme, style } = useTheme()
+  const { theme } = useTheme()
   // Use undefined to indicate "auto" (flex-1), number for fixed pixel height
   const [height, setHeight] = useState<number | undefined>(undefined)
   const [isResizing, setIsResizing] = useState(false)
