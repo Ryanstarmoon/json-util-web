@@ -103,30 +103,6 @@ export default function Workbench() {
     }
   }, [])
 
-  // Register keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + K: Open command palette
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        openCommandPalette()
-      }
-      // Cmd/Ctrl + S: Save/Download
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault()
-        handleDownload()
-      }
-      // Cmd/Ctrl + Shift + F: Format
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'f') {
-        e.preventDefault()
-        handleFormatAction()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [openCommandPalette, handleDownload, handleFormatAction])
-
   // Auto format function
   const doAutoFormat = useCallback((value: string) => {
     if (!value.trim()) {
@@ -413,6 +389,30 @@ export default function Workbench() {
     setError(null)
     setSuccess(null)
   }, [])
+
+  // Register keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K: Open command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        openCommandPalette()
+      }
+      // Cmd/Ctrl + S: Save/Download
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        handleDownload()
+      }
+      // Cmd/Ctrl + Shift + F: Format
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'f') {
+        e.preventDefault()
+        handleFormatAction()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [openCommandPalette, handleDownload, handleFormatAction])
 
   // Command Palette commands
   const commands = [
