@@ -21,8 +21,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "JSON Tool",
-  description: "Professional JSON processing tool",
+  title: "JSON Workbench — Format, Validate & Convert JSON Online",
+  description: "A free, local-first JSON toolkit. Format, minify, validate, and convert between JSON, XML, and YAML — all in your browser. No uploads, no servers.",
 };
 
 export default function RootLayout({
